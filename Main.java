@@ -34,7 +34,7 @@ public class Main {
 
 
         NeuralNetwork nn = new NeuralNetwork(0.1);  // Higher learning rate
-        nn.addInputLayer(2, 8, new ReLUActivation());
+        nn.addInputLayer(2, 3, new ReLUActivation());
         nn.addLayer(1, new SigmoidActivation());
 
         // Train the network with verbose output
