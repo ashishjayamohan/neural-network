@@ -4,8 +4,8 @@ use std::sync::Arc;
 
 pub struct Layer {
     pub output_size: usize,
-    weights: Matrix,
-    biases: Matrix,
+    pub weights: Matrix,
+    pub biases: Matrix,
     activation: Arc<dyn ActivationFunction>,
     last_input: Option<Matrix>,
     last_activation: Option<Matrix>,
@@ -29,13 +29,20 @@ impl Layer {
     }
 
     pub fn feed_forward(&mut self, input: &Matrix) -> Result<Matrix, &'static str> {
+        
         self.last_input = Some(input.clone());
+        
+        
         
         let z = Matrix::dot(&self.weights, input)?.add(&self.biases)?;
         
+        
+        
         let activation_output = z.map(|x| self.activation.activate(x));
         
+        
         self.last_activation = Some(activation_output.clone());
+        
         Ok(activation_output)
     }
 
@@ -43,27 +50,37 @@ impl Layer {
         let last_input = self.last_input.as_ref().ok_or("No input stored for backpropagation")?;
         let last_activation = self.last_activation.as_ref().ok_or("No activation stored for backpropagation")?;
         
+        
         let activation_derivative = last_activation.map(|x| self.activation.derivative(x));
         
+        
         let delta = Matrix::hadamard(output_error, &activation_derivative)?;
+        
         
         let input_transpose = Matrix::transpose(last_input);
         let weight_gradient = Matrix::dot(&delta, &input_transpose)?;
         
+        
         let weight_delta = weight_gradient.multiply(learning_rate);
         let bias_delta = delta.multiply(learning_rate);
         
-        for i in 0..self.weights.rows {
-            for j in 0..self.weights.cols {
-                let current = self.weights.get(i, j);
-                self.weights.set(i, j, current + weight_delta.get(i, j));
+        
+        let w_rows = self.weights.rows;
+        let w_cols = self.weights.cols;
+        
+        
+        for i in 0..w_rows {
+            for j in 0..w_cols {
+                let idx = i * w_cols + j;
+                self.weights.data[idx] += weight_delta.data[idx];
             }
         }
         
+        
         for i in 0..self.biases.rows {
-            let current = self.biases.get(i, 0);
-            self.biases.set(i, 0, current + bias_delta.get(i, 0));
+            self.biases.data[i] += bias_delta.data[i];
         }
+        
         
         let weights_transpose = Matrix::transpose(&self.weights);
         Matrix::dot(&weights_transpose, &delta)

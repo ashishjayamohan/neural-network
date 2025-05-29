@@ -2,7 +2,6 @@ use neural_network::{NeuralNetwork, ReLU, Sigmoid};
 use std::sync::Arc;
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
-use rand::distributions::StandardNormal;
 
 fn main() {
     println!("\n=== Time Series Prediction (Stock Price Simulation) ===");
@@ -19,7 +18,7 @@ fn main() {
         
         let seasonality = 5.0 * (i as f64 * 2.0 * std::f64::consts::PI / 20.0).sin();
         
-        let noise = rng.sample::<f64, _>(StandardNormal) * 2.0;
+        let noise = rng.gen::<f64>() * 4.0 - 2.0; 
         
         time_series_data.push(base_value + trend + seasonality + noise);
     }

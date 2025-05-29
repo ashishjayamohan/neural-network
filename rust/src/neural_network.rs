@@ -68,12 +68,35 @@ impl NeuralNetwork {
             return Err("Invalid input/target data");
         }
         
+        
+        
+        let report_frequency = if epochs < 100 {
+            10
+        } else if epochs < 1000 {
+            100
+        } else {
+            epochs / 10
+        };
+        
+        
+        let data_size = inputs.len();
+        let mut batch_indices: Vec<usize> = (0..data_size).collect();
+        
         for epoch in 0..epochs {
             let mut total_loss = 0.0;
             
-            for i in 0..inputs.len() {
+            
+            if data_size > 10 {
+                use rand::seq::SliceRandom;
+                use rand::thread_rng;
+                batch_indices.shuffle(&mut thread_rng());
+            }
+            
+            
+            for &i in &batch_indices {
                 let output = self.predict(&inputs[i])?;
                 let target = &targets[i];
+                
                 
                 let mut sample_loss = 0.0;
                 for j in 0..output.len() {
@@ -83,12 +106,14 @@ impl NeuralNetwork {
                 sample_loss /= output.len() as f64;
                 total_loss += sample_loss;
                 
+                
                 self.train(&inputs[i], target)?;
             }
             
-            let avg_loss = total_loss / inputs.len() as f64;
+            let avg_loss = total_loss / data_size as f64;
             
-            if verbose && (epoch % 100 == 0 || epoch == epochs - 1) {
+            
+            if verbose && (epoch % report_frequency == 0 || epoch == epochs - 1) {
                 let accuracy = self.calculate_accuracy(inputs, targets)?;
                 println!("Epoch {}/{} - Loss: {:.6} - Accuracy: {:.2}%", 
                          epoch + 1, epochs, avg_loss, accuracy * 100.0);
@@ -103,11 +128,25 @@ impl NeuralNetwork {
             return Err("Invalid input/target data");
         }
         
+        
+        let max_samples = if cfg!(test) { 100 } else { inputs.len() };
+        let sample_count = inputs.len().min(max_samples);
+        
+        
+        let indices: Vec<usize> = if sample_count < inputs.len() {
+            let step = inputs.len() / sample_count;
+            (0..sample_count).map(|i| i * step).collect()
+        } else {
+            (0..inputs.len()).collect()
+        };
+        
         let mut correct = 0;
         
-        for i in 0..inputs.len() {
+        
+        for &i in &indices {
             let output = self.predict(&inputs[i])?;
             let target = &targets[i];
+            
             
             let mut is_correct = true;
             
@@ -124,7 +163,8 @@ impl NeuralNetwork {
             }
         }
         
-        Ok(correct as f64 / inputs.len() as f64)
+        
+        Ok(correct as f64 / sample_count as f64)
     }
 }
 

@@ -2,7 +2,7 @@ use neural_network::{NeuralNetwork, ReLU, Softmax};
 use std::sync::Arc;
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
-use rand::distributions::StandardNormal;
+use rand::distributions::Standard;
 
 fn main() {
     println!("\n=== Multi-Class Classification (3 Classes) ===");
@@ -24,8 +24,8 @@ fn main() {
     
     for c in 0..num_classes {
         for _ in 0..samples_per_class {
-            let x = centers[c][0] + rng.sample::<f64, _>(StandardNormal) * 0.1;
-            let y = centers[c][1] + rng.sample::<f64, _>(StandardNormal) * 0.1;
+            let x = centers[c][0] + rng.gen::<f64>() * 0.1 - 0.05;
+            let y = centers[c][1] + rng.gen::<f64>() * 0.1 - 0.05;
             
             let mut target = vec![0.0; num_classes];
             target[c] = 1.0;
@@ -41,7 +41,7 @@ fn main() {
     nn.add_layer(num_classes, Arc::new(Softmax)).unwrap();
     
     println!("Training Multi-Class Classification network...");
-    nn.fit(&inputs, &targets, 3000, true).unwrap();
+    nn.fit(&inputs, &targets, 300, true).unwrap();
     
     println!("\nMulti-Class Classification Test Results:");
     let mut correct = 0;

@@ -81,13 +81,15 @@ fn main() {
         }
     }
     
-    let mut nn = NeuralNetwork::new(0.05);
-    nn.add_input_layer(pixels_per_digit, 64, Arc::new(ReLU)).unwrap();
-    nn.add_layer(32, Arc::new(ReLU)).unwrap();
+    
+    let mut nn = NeuralNetwork::new(0.2); 
+    nn.add_input_layer(pixels_per_digit, 16, Arc::new(ReLU)).unwrap(); 
+    nn.add_layer(8, Arc::new(ReLU)).unwrap(); 
     nn.add_layer(num_digits, Arc::new(Softmax)).unwrap();
     
     println!("Training Simplified MNIST network...");
-    nn.fit(&inputs, &targets, 2000, true).unwrap();
+    
+    nn.fit(&inputs, &targets, 100, true).unwrap();
     
     println!("\nSimplified MNIST Test Results:");
     
